@@ -149,61 +149,44 @@ jQuery(function($) {
 		});
 	}
 
-	function serverLinksGenerator() {
-		var server_link = document.location.href.replace('http://', ''),
-			server_link = server_link.split('?'),
-			server_link = server_link[0],
-			server_link = server_link.substring(server_link.length - 1, ''),
-			server_links = server_link.split('/'),
-			server_links_count = server_links.length - 1,
-			$server_links_container = document.getElementsByTagName('th')[1];
+	var Breadcrumbs = {
+		generate: function() {
+			var server_links = document.location.pathname.split('/').filter(Boolean),
+				server_links_count = server_links.length,
+				$breadcrumbs_container = document.getElementsByTagName('th')[1],
+				$link, link_href;
 
-		$server_links_container.innerHTML = '';
+			$breadcrumbs_container.innerHTML = '';
+			$breadcrumbs_container.className = 'breadcrumbs';
+			$breadcrumbs_container.appendChild(this.root());
 
-		for(i=0; i<=server_links_count; i++) {
-			var $link = document.createElement('a'),
-				link_href = '/',
-				link_text = document.location.hostname + '/';
+			for(i=0; i < server_links_count; i++) {
+				$link = document.createElement('a');
 
-			$link.href = link_href;
+				link_href = server_links.slice(0, i+1).join('/');
+				$link.href = link_href.length == 0 ? '/' : '/' + link_href + '/';
 
-			if(server_links_count > 0) {
-				for(n=0; n<=i; n++) {
-					link_href = link_href + server_links[n] + '/';
-				}
+				$link.innerHTML = server_links[i];
 
-				if(i>0) {
-					link_text = server_links[i] + '/';
-				}
-			} else {
-				link_href = link_text;
+				$breadcrumbs_container.appendChild(this.separator());
+				$breadcrumbs_container.appendChild($link);
 			}
+		},
+		separator: function() {
+			var separator = document.createElement('span');
+			separator.innerHTML = '/';
 
-			link_href = 'http://' + link_href;
-			link_href = link_href.replace('///', '//');
+			return separator;
+		},
+		root: function() {
+			var $link = document.createElement('a');
 
-			$link.href = link_href;
-			$link.innerHTML = link_text;
+			$link.href = '/';
+			$link.innerHTML = document.location.host;
 
-			$server_links_container.appendChild($link);
+			return $link;
 		}
-	}
-
-	function createSelection(field, start, end) {
-		if( field.createTextRange ) {
-			var selRange = field.createTextRange();
-			selRange.collapse(true);
-			selRange.moveStart('character', start);
-			selRange.moveEnd('character', end-start);
-			selRange.select();
-		} else if( field.setSelectionRange ) {
-			field.setSelectionRange(start, end);
-		} else if( field.selectionStart ) {
-			field.selectionStart = start;
-			field.selectionEnd = end;
-		}
-		field.focus();
-	}
+	};
 
 	function createCookie(name,value,days) {
 		var expires = "";
@@ -289,7 +272,7 @@ jQuery(function($) {
 	updateTheme();
 	typeAheadInit();
 	typeAheadEvents();
-	serverLinksGenerator();
+	Breadcrumbs.generate();
 
 	// Add tabindex to rows
 	$('.wrapper table tr').slice(1).each(function(i) {
